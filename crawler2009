@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from lxml import html
+import requests, csv
+
+url2 = 'http://www.espn.com/nhl/statistics/team/_/stat/special-teams/sort/games/year/2008'
+url1 = 'http://stats.hockeyanalysis.com/teamstats.php?db=200708&sit=5v5&disp=1&sortdir=DESC&sort=GFPCT'
+url = 'http://www.shrpsports.com/nhl/stand/2008finaldiv.htm'
+fname = 'data200708.csv'
+
+page2 = requests.get(url2)
+tree2 = html.fromstring(page2.content)
+
+page1 = requests.get(url1)
+tree1 = html.fromstring(page1.content)
+
+page = requests.get(url)
+tree = html.fromstring(page.content)
+
+information = {}
+tname = ''
+#get teams, team points
+for i in range(30):
+    tname = tree.cssselect('tr[class="standfont1"] td[align="left"] a')[i] 
+    tname = tname.text.replace('.', '')
+    if 'Phoenix' in tname:
+        tname = 'Arizona'
+    if 'Atlanta' in tname:
+        tname = 'Winnipeg'
+
+    information[tname] = [int(tree.cssselect('tr[class="standfont1"] td[align="right"]')[i*3].text)]
+
+#corsi, etc
+tname = ''
+for i in range(30):
+    tname = tree1.cssselect('tr td')[5 + i*30] 
+    tname = tname.text.replace('.', '')
+    if 'Phoenix' in tname:
+        tname = 'Arizona'
+    if 'Atlanta' in tname:
+        tname = 'Winnipeg'
+    information[tname].append(int(tree1.cssselect('td center')[2 + i*28].text))
+    information[tname].append(int(tree1.cssselect('td center')[3 + i*28].text))
+    information[tname].append(int(tree1.cssselect('td center')[17 + i*28].text))
+
+#pp%, pk%
+tname = ''
+for i in range(30):
+    tname = tree2.cssselect('tr[class*="team"] td[align="left"]')[1 + i*2]
+    if tname.text is None:
+        print '====IF TAKEN DUDE =======\n'
+        tname = tree2.cssselect('tr[class*="team"] td[align="left"]')[1 + i*2].cssselect('a')[0]
+    tname = tname.text.replace('.', '')
+    if 'Phoenix' in tname:
+        tname = 'Arizona'
+    if 'Atlanta' in tname:
+        tname = 'Winnipeg'
+    information[tname].append(float(tree2.cssselect('tr[class*="team"] td')[5 + i*11].text))
+    information[tname].append(float(tree2.cssselect('tr[class*="team"] td')[9 + i*11].text))
+
+with open('fname', 'wb') as csvfile:
+    fieldnames = ['team', 'stats']
+    writer = csv.writer(csvfile)
+    writer.writerow(['team', 'points', 'gf', 'ga', 'corsi', 'pp%', 'pk%'])
+    for x in information:
+        writer.writerow([x] + information[x])
+
+print information 
+
