@@ -4,67 +4,143 @@
 from lxml import html
 import requests, csv
 
-url2 = 'http://www.espn.com/nhl/statistics/team/_/stat/special-teams/sort/games/year/2008'
-url1 = 'http://stats.hockeyanalysis.com/teamstats.php?db=200708&sit=5v5&disp=1&sortdir=DESC&sort=GFPCT'
-url = 'http://www.shrpsports.com/nhl/stand/2008finaldiv.htm'
-fname = 'data200708.csv'
+#vals to retrive seasons
+url2_vals = ['2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016']
+url1_vals = ['200708', '200809', '200910', '201011', '201112', '201213', '201314', '201415', '201516']
 
-page2 = requests.get(url2)
-tree2 = html.fromstring(page2.content)
-
-page1 = requests.get(url1)
-tree1 = html.fromstring(page1.content)
-
-page = requests.get(url)
+#dictionary for teams' abbreviated names
+page = requests.get('http://www.sportsforecaster.com/nhl/abbreviations')
 tree = html.fromstring(page.content)
+abvset = {}
 
-information = {}
-tname = ''
-#get teams, team points
-for i in range(30):
-    tname = tree.cssselect('tr[class="standfont1"] td[align="left"] a')[i] 
-    tname = tname.text.replace('.', '')
-    if 'Phoenix' in tname:
-        tname = 'Arizona'
-    if 'Atlanta' in tname:
-        tname = 'Winnipeg'
+for i in xrange(320, 388, 2):
+    tabbrev = tree.cssselect('tbody tr td')[i].text.upper()
+    if 'PHX' in tabbrev:
+        abvset[tabbrev] = 'Arizona'
+        continue
+    if 'ATL' in tabbrev:
+        abvset[tabbrev] = 'Winnipeg'
+        continue
+    
+    #s[tree.cssselect('tbody tr td')[i].text.upper()] = tree.cssselect('tbody tr td')[i+1].text
+    abvset[tabbrev] = tree.cssselect('tbody tr td')[i+1].text.replace('.', '') 
 
-    information[tname] = [int(tree.cssselect('tr[class="standfont1"] td[align="right"]')[i*3].text)]
 
-#corsi, etc
-tname = ''
-for i in range(30):
-    tname = tree1.cssselect('tr td')[5 + i*30] 
-    tname = tname.text.replace('.', '')
-    if 'Phoenix' in tname:
-        tname = 'Arizona'
-    if 'Atlanta' in tname:
-        tname = 'Winnipeg'
-    information[tname].append(int(tree1.cssselect('td center')[2 + i*28].text))
-    information[tname].append(int(tree1.cssselect('td center')[3 + i*28].text))
-    information[tname].append(int(tree1.cssselect('td center')[17 + i*28].text))
+#loop for collecting stats
+for j in xrange(9):
+    url3 = 'http://www.espn.com/nhl/statistics/player/_/stat/points/sort/points/year/' + url1_vals[j]
+    url2 = 'http://www.espn.com/nhl/statistics/team/_/stat/special-teams/sort/games/year/' + url2_vals[j]
+    url1 = 'http://stats.hockeyanalysis.com/teamstats.php?db=' + url1_vals[j] +'&sit=5v5&disp=1&sortdir=DESC&sort=GFPCT'
+    url = 'http://www.shrpsports.com/nhl/stand/'+ url2_vals[j] +'finaldiv.htm'
+    fname = url1_vals[j] + '.csv'
+    print 'begin season:' + url1_vals[j]
 
-#pp%, pk%
-tname = ''
-for i in range(30):
-    tname = tree2.cssselect('tr[class*="team"] td[align="left"]')[1 + i*2]
-    if tname.text is None:
-        print '====IF TAKEN DUDE =======\n'
-        tname = tree2.cssselect('tr[class*="team"] td[align="left"]')[1 + i*2].cssselect('a')[0]
-    tname = tname.text.replace('.', '')
-    if 'Phoenix' in tname:
-        tname = 'Arizona'
-    if 'Atlanta' in tname:
-        tname = 'Winnipeg'
-    information[tname].append(float(tree2.cssselect('tr[class*="team"] td')[5 + i*11].text))
-    information[tname].append(float(tree2.cssselect('tr[class*="team"] td')[9 + i*11].text))
+    page3 = requests.get(url3)
+    tree3 = html.fromstring(page3.content)
 
-with open('fname', 'wb') as csvfile:
-    fieldnames = ['team', 'stats']
-    writer = csv.writer(csvfile)
-    writer.writerow(['team', 'points', 'gf', 'ga', 'corsi', 'pp%', 'pk%'])
+    page2 = requests.get(url2)
+    tree2 = html.fromstring(page2.content)
+
+    page1 = requests.get(url1)
+    tree1 = html.fromstring(page1.content)
+
+    page = requests.get(url)
+    tree = html.fromstring(page.content)
+
+    information = {}
+    tname = ''
+    #get teams, team points, goals for/against
+    for i in xrange(30):
+        tname = tree.cssselect('tr[class="standfont1"] td[align="left"] a')[i] 
+        tname = tname.text.replace('.', '')
+        if 'Phoenix' in tname:
+            tname = 'Arizona'
+        if 'Atlanta' in tname:
+            tname = 'Winnipeg'
+
+        information[tname] = [int(tree.cssselect('tr[class="standfont1"] td[align="right"]')[i*3].text)]
+        gf = int(tree.cssselect('tr[class="standfont1"] td[align="right"]')[1 + i*3].text)
+        ga = int(tree.cssselect('tr[class="standfont1"] td[align="right"]')[2 + i*3].text) 
+        information[tname].append(gf)
+        information[tname].append(ga)
+        information[tname].append(gf - ga)
+    
+    #corsi, corsi%
+    tname = ''
+    for i in xrange(30):
+        tname = tree1.cssselect('tr td')[5 + i*30] 
+        tname = tname.text.replace('.', '')
+        if 'Phoenix' in tname:
+            tname = 'Arizona'
+        if 'Atlanta' in tname:
+            tname = 'Winnipeg'
+
+        gf = int(tree1.cssselect('td center')[2 + i*28].text)
+        ga = int(tree1.cssselect('td center')[3 + i*28].text)
+        information[tname].append(int(tree1.cssselect('td center')[17 + i*28].text))
+        information[tname].append(float(tree1.cssselect('td center')[21 + i*28].text))
+
+    #pp%, pk%
+    tname = ''
+    for i in xrange(30):
+        tname = tree2.cssselect('tr[class*="team"] td[align="left"]')[1 + i*2]
+        if tname.text is None:
+            #print '====IF TAKEN DUDE =======\n'
+            tname = tree2.cssselect('tr[class*="team"] td[align="left"]')[1 + i*2].cssselect('a')[0]
+        tname = tname.text.replace('.', '')
+        if 'Phoenix' in tname:
+            tname = 'Arizona'
+        if 'Atlanta' in tname:
+            tname = 'Winnipeg'
+        information[tname].append(float(tree2.cssselect('tr[class*="team"] td')[5 + i*11].text))
+        information[tname].append(float(tree2.cssselect('tr[class*="team"] td')[9 + i*11].text))
+    
+    #init top 20 scorers, sc playoff finish
     for x in information:
-        writer.writerow([x] + information[x])
+        information[x].append(0)
+        information[x].append('DNQ')
+        
 
-print information 
+    #top 20 scorers
+    tabbrev = ''
+    tname = ''
+    for i in xrange(2, 60, 3):
+        tabbrev = tree3.cssselect('tr[class*="player"] td[align="left"]')[i].text
+        tname = abvset[tabbrev] 
+        information[tname][8] += 1
+
+    #sc playoff finish
+    tname = ''
+    for i in xrange(1,31):
+        tname = tree.cssselect('tr[class="font1big"] a')[-i].text.replace('.', '')
+        if 'Phoenix' in tname:
+            tname = 'Arizona'
+        if 'Atlanta' in tname:
+            tname = 'Winnipeg'
+        if i == 1:
+            information[tname][9] = 'SCL'
+        if i == 2:
+            information[tname][9] = 'SCW'
+        if i == 3: 
+            information[tname][9] = 'R3w'
+        if i == 17:
+            information[tname][9] = 'R3e'
+        if (i == 5 or i == 7): 
+            information[tname][9] = 'R2w'
+        if (i == 19 or i == 21):
+            information[tname][9] = 'R2e'
+        if (i == 9 or i == 11 or i == 13 or i == 15): 
+            information[tname][9] = 'R1w'
+        if (i == 23 or i == 25 or i == 27 or i == 29):
+            information[tname][9] = 'R1e'
+
+    #write to csv
+    with open(fname, 'wb') as csvfile:
+        fieldnames = ['team', 'stats']
+        writer = csv.writer(csvfile)
+        writer.writerow(['team', 'points', 'gf', 'ga', 'gd', 'corsi', 'corsi%', 'pp%', 'pk%', 't20', 'ploffs'])
+        for x in information:
+            writer.writerow([x] + information[x])
+
+    print 'done season:' + url1_vals[j]
 
