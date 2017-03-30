@@ -98,7 +98,7 @@ for j in xrange(9):
     #init top 20 scorers, sc playoff finish
     for x in information:
         information[x].append(0)
-        information[x].append('DNQ')
+        information[x].append(0)
         
 
     #top 20 scorers
@@ -117,22 +117,17 @@ for j in xrange(9):
             tname = 'Arizona'
         if 'Atlanta' in tname:
             tname = 'Winnipeg'
-        if i == 1:
-            information[tname][9] = 'SCL'
         if i == 2:
-            information[tname][9] = 'SCW'
-        if i == 3: 
-            information[tname][9] = 'R3w'
-        if i == 17:
-            information[tname][9] = 'R3e'
-        if (i == 5 or i == 7): 
-            information[tname][9] = 'R2w'
-        if (i == 19 or i == 21):
-            information[tname][9] = 'R2e'
-        if (i == 9 or i == 11 or i == 13 or i == 15): 
-            information[tname][9] = 'R1w'
-        if (i == 23 or i == 25 or i == 27 or i == 29):
-            information[tname][9] = 'R1e'
+            information[tname][9] = 'SC'
+        if i == 1:
+            information[tname][9] = 4
+        if i == 3 or i == 17: 
+            information[tname][9] = 3
+        if i == 5 or i == 7 or i == 19 or i == 21: 
+            information[tname][9] = 2
+        if i == 9 or i == 11 or i == 13 or i == 15 or i == 23 or i == 25 or i == 27 or i == 29: 
+            information[tname][9] = 1
+
 
     #write to csv
     with open(fname, 'wb') as csvfile:
