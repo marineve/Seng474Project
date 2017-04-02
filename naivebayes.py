@@ -13,31 +13,31 @@ num_attribute_values = {
 
 class HockeyBayes:
     """This class uses Naive Bayes algorithm to classify hockey statistics."""
-    def __init__(self, test_data):
+    def __init__(self, training_data):
         """Initilizes a HockeyBayes instance.
 
         Args:
-            test_data (file): A csv file containing testing data.
+            training_data (file): A csv file containing training data.
         """
-        self._test_data = self.get_csv_data(test_data)
-        self._test_data = self.transform_data(self._test_data)
+        self._training_data = self.get_csv_data(training_data)
+        self._training_data = self.transform_data(self._training_data)
 
-    def classify_data(self, data, result_file_name=None):
-        """Classify data with the testing data.
+    def classify_data(self, test_data, result_file_name=None):
+        """Classify test data with the training data.
 
         Args:
-            data (file): A csv file containing the data to be classified.
+            test_data (file): A csv file containing the test data to be classified.
             result_file_name (str): An optional result file name.
         """
-        instance_data = self.transform_data(self.get_csv_data(data))
+        testing_data = self.transform_data(self.get_csv_data(test_data))
 
         # Set up the results list
         results = [['team']]
         results[0].extend(classes)
 
-        # Classify data
-        for instance in instance_data:
-            # Send all data except the last column, which contains what
+        # Classify test data
+        for instance in testing_data:
+            # Send all test data except the last column, which contains what
             # we're attempting to classify
             probabilities = self.find_prob_class_given_evidence(instance[:-1])
 
@@ -168,7 +168,7 @@ class HockeyBayes:
         return processed_data
 
     def find_prob_class_given_evidence(self, instance):
-        """Determine an instance's class from testing data.
+        """Determine an instance's class from training data.
 
         Args:
             instance (list): A list containing data for one team.
@@ -194,7 +194,7 @@ class HockeyBayes:
 
             # Multiply all elements in list together
             all_probs = reduce(lambda x, y: x*y, class_prob_list)
-            class_prob = (float(num_class_inst) + 1)/(len(self._test_data) + num_attribute_values['ploffs'])
+            class_prob = (float(num_class_inst) + 1)/(len(self._training_data) + num_attribute_values['ploffs'])
             temp_prob = all_probs * class_prob
             prob_dict.update({class_val: temp_prob})
 
@@ -207,7 +207,7 @@ class HockeyBayes:
         return prob_dict
 
     def find_num_inst_of_class(self, class_value):
-        """Determine the number of instances of a class in the testing data.
+        """Determine the number of instances of a class in the training data.
 
         Args:
             class_value (str): A string representing the class value to find.
@@ -216,13 +216,13 @@ class HockeyBayes:
             float: The number of instances containing a particular class value.
         """
         num_inst_of_class = 0
-        for inst in self._test_data[1:]:
+        for inst in self._training_data[1:]:
             if inst[-1] == class_value:
                 num_inst_of_class += 1
         return num_inst_of_class
 
     def find_num_attr_given_class(self, value, index, class_value):
-        """Determine the number of instances a specified value in the testing data.
+        """Determine the number of instances a specified value in the training data.
 
         Args:
             value (str): A string representing the value to match.
@@ -233,7 +233,7 @@ class HockeyBayes:
             float: The number of instances that contain the value and the class_value.
         """
         num_value_in_class = 0
-        for inst in self._test_data:
+        for inst in self._training_data:
             class_present = inst[-1] == class_value
             value_present = inst[index] == value
             if class_present and value_present:
