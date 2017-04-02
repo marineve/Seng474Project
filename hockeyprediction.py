@@ -6,17 +6,17 @@ import sys
 
 def main(argv):
     # Assign user-input files for testing and classification
-    test_data = argv[0]
-    class_data = argv[1]
+    training_data = argv[0]
+    testing_data = argv[1]
 
     # Create a HockeyBayes instance and classify data
-    predictor = nb.HockeyBayes(test_data)
-    predictor.classify_data(class_data)
+    predictor = nb.HockeyBayes(training_data)
+    predictor.classify_data(testing_data)
 
 if __name__ == "__main__":
     # Command line arguments:
-    #   testing_data: csv file containing test data
-    #   class_data: the data file to be classified
+    #   training_data: csv file containing training data
+    #   test_data: the data file to be classified
     #   result: the result file containing team name and standing
     if len(sys.argv) == 3:
         main(sys.argv[1:])
