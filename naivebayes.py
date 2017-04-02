@@ -1,7 +1,7 @@
 import csv
 
 attributes = ['points', '+/-', 'pp%', 'corsi%', 't20', 'ploffs']
-classes = ['DNQ', 'R1w', 'R2w', 'R3w', 'R1e', 'R2e', 'R3e', 'SCL', 'SCW']
+classes = ['0', '1', '2', '3', '4', 'SC']
 num_attribute_values = {
     'points': 6,
     '+/-': 7,
