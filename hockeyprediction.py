@@ -1,25 +1,26 @@
 #!/usr/bin/python
 
+import argparse
 import naivebayes as nb
-import sys
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+                '--train',
+                nargs='*',
+                required=True,
+                help='A list of csv files containing training data')
+parser.add_argument(
+                '--test',
+                required=True,
+                help='A csv file containing testing data')
+args = parser.parse_args()
 
-def main(argv):
-    # Assign user-input files for testing and classification
-    training_data = argv[0]
-    testing_data = argv[1]
+# Assign training data
+training_data = args.train
 
-    # Create a HockeyBayes instance and classify data
-    predictor = nb.HockeyBayes(training_data)
-    predictor.classify_data(testing_data)
+# Assign testing data
+testing_data = args.test
 
-if __name__ == "__main__":
-    # Command line arguments:
-    #   training_data: csv file containing training data
-    #   test_data: the data file to be classified
-    #   result: the result file containing team name and standing
-    if len(sys.argv) == 3:
-        main(sys.argv[1:])
-    else:
-        print 'Two files are required: one for testing, and one for classifying'
-        exit(-1)
+# Create a HockeyBayes instance and classify test data
+predictor = nb.HockeyBayes(training_data)
+predictor.classify_data(testing_data)

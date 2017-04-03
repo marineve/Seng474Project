@@ -19,8 +19,11 @@ class HockeyBayes:
         Args:
             training_data (file): A csv file containing training data.
         """
-        self._training_data = self.get_csv_data(training_data)
-        self._training_data = self.transform_data(self._training_data)
+        self._training_data = []
+        for training_file in training_data:
+            data = self.get_csv_data(training_file)
+            modified_data = self.transform_data(data)
+            self._training_data.extend(modified_data)
 
     def classify_data(self, test_data, result_file_name=None):
         """Classify test data with the training data.
