@@ -37,8 +37,10 @@ class HockeyBayes:
         # Set up the results list
         results = [['team']]
         results[0].extend(classes)
+        results[0].append('class')
 
-        # Classify test data
+        # Classify test data and determine classification accuracy
+        num_correct_class = 0
         for instance in testing_data:
             # Send all test data except the last column, which contains what
             # we're attempting to classify
@@ -48,9 +50,23 @@ class HockeyBayes:
             all_probs = [instance[0]]
 
             # Append the probabilities and add it to the results list
+            highest_prob = 0
+            classification = ''
             for val in classes:
+                if probabilities[val] > highest_prob:
+                    highest_prob = probabilities[val]
+                    classification = val
                 all_probs.append(probabilities[val])
+
+            if classification == instance[-1]:
+                num_correct_class += 1
+
+            all_probs.append(classification)
             results.append(all_probs)
+
+        # Determine the accuracy add to the results
+        accuracy = float(num_correct_class)/len(testing_data)
+        results.append(['accuracy', accuracy])
 
         # Write the results to a csv file
         result_csv = self.write_csv_data(results, result_file_name)
